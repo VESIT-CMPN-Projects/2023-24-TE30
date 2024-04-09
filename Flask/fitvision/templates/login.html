@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<body class="bg-gray-900 text-white flex items-center h-screen">
+
+  <div class="flex justify-center w-full">
+
+    <!-- Trainer Login Section -->
+    <div class="w-1/2 p-12 bg-gray-800 rounded-lg mr-2">
+      <h2 class="text-3xl font-bold mb-8 text-blue-500">Trainer Login</h2>
+      <form class="space-y-4">
+        <div>
+          <label for="trainerEmail" class="block text-sm font-medium">Email:</label>
+          <input type="email" id="trainerEmail" name="trainerEmail" class="form-input w-full px-4 py-2 rounded-md text-black focus:outline-none focus:shadow-outline-blue focus:border-blue-500">
+        </div>
+        <div>
+          <label for="trainerPassword" class="block text-sm font-medium">Password:</label>
+          <input type="password" id="trainerPassword" name="trainerPassword" class="form-input w-full px-4 py-2 rounded-md text-black focus:outline-none focus:shadow-outline-blue focus:border-blue-500">
+        </div>
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full focus:outline-none focus:shadow-outline-blue">Login</button>
+        <p class="mt-2 text-sm">Don't have an account? <a href="#" class="text-blue-400">Register here</a></p>
+      </form>
+    </div>
+
+    <!-- User Login Section -->
+    <div class="w-1/2 p-12 bg-gray-800 rounded-lg ml-2">
+      <h2 class="text-3xl font-bold mb-8 text-green-500">User Login</h2>
+      <form class="space-y-4">
+        <div>
+          <label for="userEmail" class="block text-sm font-medium">Email:</label>
+          <input type="email" id="userEmail" name="userEmail" class="form-input w-full px-4 py-2 rounded-md text-black focus:outline-none focus:shadow-outline-green focus:border-green-500">
+        </div>
+        <div>
+          <label for="userPassword" class="block text-sm font-medium">Password:</label>
+          <input type="password" id="userPassword" name="userPassword" class="form-input w-full px-4 py-2 rounded-md text-black focus:outline-none focus:shadow-outline-green focus:border-green-500">
+        </div>
+        <button type="submit" class="text-white py-2 px-4 rounded-full focus:shadow-outline-green"  style="background-color: #10B981; transition: background-color 0.3s;" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10B981'">Login</button>
+
+        <p class="mt-2 text-sm">Don't have an account? <a href="#" class="text-green-400">Register here</a></p>
+      </form>
+    </div>
+
+  </div>
+
+{% endblock %}
+</body>
+</html>

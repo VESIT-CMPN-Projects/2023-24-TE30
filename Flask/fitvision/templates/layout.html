@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Your Fitness App</title>
+    <!-- Include Tailwind CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link href="{{ url_for('static', filename='content/output.css') }}" rel="stylesheet">
+</head>
+
+<body class="flex flex-col min-h-screen bg-gray-900 text-white">
+    <div class="navbar bg-gray-800">
+        <div class="container mx-auto">
+            <div class="flex items-center justify-between py-4">
+                <div class="flex-shrink-0">
+                    <a href="/" class="text-xl font-bold">FitVision</a>
+                </div>
+                <div class="hidden md:flex">
+                    <ul class="flex space-x-4">
+                        <li><a href="{{ url_for('home') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">Trainers</a></li>
+                        <li><a href="{{ url_for('explore') }}">Explore</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                    </ul>
+                </div>
+                <div class="md:hidden">
+                    <button type="button" class="text-white focus:outline-none">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto body-content mt-8 flex-grow">
+        {% block content %}{% endblock %}
+        <hr class="my-8 border-t border-gray-700" />
+    </div>
+
+    <footer class="bg-gray-700 text-white py-4">
+        <div class="container mx-auto text-center">
+            <p>&copy; {{ year }} - Your Fitness App</p>
+        </div>
+    </footer>
+
+    <!-- Include Bootstrap JS and your custom JS files -->
+    <script src="{{ url_for('static', filename='scripts/jquery-1.10.2.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/respond.js') }}"></script>
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>
