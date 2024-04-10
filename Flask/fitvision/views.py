@@ -176,6 +176,247 @@ def shoulderpress():
         return frame
 
     return calculate_angle, detect_bicep
+
+def plank():
+    def calculate_angle(a, b, c):
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
+
+    def is_correct_pose(angle, lower_bound, upper_bound):
+        return lower_bound <= angle <= upper_bound
+
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
+
+        if results.pose_landmarks:
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
+
+            left_shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value]
+            left_elbow = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW.value]
+            left_wrist = landmarks[mp.solutions.pose.PoseLandmark.LEFT_WRIST.value]
+            left_hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP.value]
+
+            right_shoulder = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER.value]
+            right_elbow = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW.value]
+            right_wrist = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_WRIST.value]
+            right_hip = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_HIP.value]
+
+            angle_lshoulder_lelbow_lwrist = calculate_angle(left_shoulder, left_elbow, left_wrist)
+            angle_rshoulder_relbow_rwrist = calculate_angle(right_shoulder, right_elbow, right_wrist)
+            angle_lelbow_lshoulder_lhip = calculate_angle(left_elbow, left_shoulder, left_hip)
+            angle_relbow_rshoulder_rhip = calculate_angle(right_elbow, right_shoulder, right_hip)
+
+
+            cv2.putText(frame, f"angle_shoulder_elbow_wrist {round(angle_lelbow_lshoulder_lhip, 2)}", (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0), 2)
+
+            if is_correct_pose(angle_lshoulder_lelbow_lwrist, 60, 170) and is_correct_pose(angle_rshoulder_relbow_rwrist,60,170) and is_correct_pose(angle_lelbow_lshoulder_lhip,70,180) and is_correct_pose(angle_relbow_rshoulder_rhip,70,180):
+                # Code block if left_arm_angle is outside the range
+                cv2.putText(frame, "shoulderpress Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.LEFT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.LEFT_HIP,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+                                  ]
+
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+        return frame
+
+    return calculate_angle, detect_bicep
+
+def lunges():
+    def calculate_angle(a, b, c):
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
+
+    def is_correct_pose(angle, lower_bound, upper_bound):
+        return lower_bound <= angle <= upper_bound
+
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
+
+        if results.pose_landmarks:
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
+
+
+            left_hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP.value]
+            left_knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE.value]
+            left_ankle = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ANKLE.value]
+
+            right_hip = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_HIP.value]
+            right_knee = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_KNEE.value]
+            right_ankle = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ANKLE.value]
+
+            angle_lhip_lknee_lankle = calculate_angle(left_hip, left_knee, left_ankle)
+            angle_rhip_rknee_rankle = calculate_angle(right_hip, right_knee, right_ankle)
+
+
+            cv2.putText(frame, f"angle_shoulder_elbow_wrist {round(angle_rhip_rknee_rankle, 2)}", (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 1,(0, 255, 0), 2)
+
+            if is_correct_pose(angle_lhip_lknee_lankle, 70, 170) and is_correct_pose(angle_rhip_rknee_rankle,100,170):
+                # Code block if left_arm_angle is outside the range
+                cv2.putText(frame, "shoulderpress Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_HIP,
+                                  mp.solutions.pose.PoseLandmark.LEFT_KNEE,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ANKLE,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_KNEE,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_ANKLE,
+
+                                  ]
+
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+        return frame
+
+    return calculate_angle, detect_bicep
+
+
+def lllift():
+    def calculate_angle(a, b, c):
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
+
+    def is_correct_pose(angle, lower_bound, upper_bound):
+        return lower_bound <= angle <= upper_bound
+
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
+
+        if results.pose_landmarks:
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
+
+            left_hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP.value]
+            left_knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE.value]
+            right_ankle = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ANKLE.value]
+
+            right_hip = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_HIP.value]
+            right_knee = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_KNEE.value]
+            left_ankle = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ANKLE.value]
+
+            angle_lhip_lknee_lankle = calculate_angle(left_hip, left_knee, right_ankle)
+            angle_rhip_rknee_rankle = calculate_angle(right_hip, right_knee, left_ankle)
+
+            cv2.putText(frame, f"angle_lhip_lknee_lankle {round(angle_lhip_lknee_lankle, 2)}", (0, 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+            if is_correct_pose(angle_lhip_lknee_lankle, 160, 180) or is_correct_pose(angle_rhip_rknee_rankle, 160, 180):
+                # Code block if left_arm_angle is outside the range
+                cv2.putText(frame, "shoulderpress Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_HIP,
+                                  mp.solutions.pose.PoseLandmark.LEFT_KNEE,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ANKLE,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_KNEE,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_ANKLE,
+
+                                  ]
+
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+        return frame
+
+    return calculate_angle, detect_bicep
+
+def tricepextension():
+    def calculate_angle(a, b, c):
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
+
+    def is_correct_pose(angle, lower_bound, upper_bound):
+        return lower_bound <= angle <= upper_bound
+
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
+
+        if results.pose_landmarks:
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
+
+            left_elbow = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW.value]
+            left_shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value]
+            left_wrist = landmarks[mp.solutions.pose.PoseLandmark.LEFT_WRIST.value]
+            left_hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP.value]
+
+            right_elbow = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW.value]
+            right_shoulder = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER.value]
+            right_wrist = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_WRIST.value]
+            right_hip = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_HIP.value]
+
+            angle_lshoulder_lelbow_lwrist = calculate_angle(left_shoulder, left_elbow, left_wrist)
+            angle_rshoulder_relbow_rwrist = calculate_angle(right_shoulder, right_elbow, right_wrist)
+            angle_lelbow_lshoulder_lhip = calculate_angle(left_elbow, left_shoulder, left_hip)
+            angle_relbow_rshoulder_rhip = calculate_angle(right_elbow, right_shoulder, right_hip)
+
+
+            cv2.putText(frame, f"angle_shoulder_elbow_wrist {round(angle_lshoulder_lelbow_lwrist, 2)}", (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 1,(0, 255, 0), 2)
+
+            if is_correct_pose(angle_lshoulder_lelbow_lwrist, 20, 170) and is_correct_pose(angle_rshoulder_relbow_rwrist,20,170) and is_correct_pose(angle_lelbow_lshoulder_lhip,170,180) and is_correct_pose(angle_relbow_rshoulder_rhip,170,180):
+                # Code block if left_arm_angle is outside the range
+                cv2.putText(frame, "shoulderpress Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.LEFT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.LEFT_HIP,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+                                  ]
+
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+        return frame
+
+    return calculate_angle, detect_bicep
+
 def generate_frames(detect_bicep):
     while True:
         success, frame = cap.read()
@@ -227,6 +468,46 @@ def exercise3():
     global generate_frames_exercise1
     generate_frames_exercise1 = generate_frames(detect_bicep)
     return render_template('exercise3.html')
+
+@app.route('/exercise4') #shoulderpress
+def exercise4():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = plank()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise4.html')
+
+@app.route('/exercise5') #shoulderpress
+def exercise5():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = lunges()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise5.html')
+
+@app.route('/exercise6') #shoulderpress
+def exercise6():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = lllift()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise6.html')
+
+@app.route('/exercise7') #shoulderpress
+def exercise7():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = tricepextension()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise6.html')
 
 @app.route('/video_feed')
 def video_feed():
