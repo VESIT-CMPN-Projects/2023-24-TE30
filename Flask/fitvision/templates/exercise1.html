@@ -4,14 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bicep</title>
+    <!-- Include Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gif-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
-<body>
-    <h1>Bicep</h1>
-    <div id="videoContainer">
-        <img id="videoFeed" src="" width="640" height="480">
+<body class="bg-gray-900 text-white">
+    <h1 class="text-3xl font-bold my-4 ml-10">Bicep</h1>
+    <div id="videoContainer" class="flex border border-gray-700 rounded-lg overflow-hidden mx-12">
+        <div class="flex-1">
+            <img id="videoFeed" src="" width="640" height="480">
+        </div>
+        <div class="flex-1 p-4 border-l border-gray-700"> <!-- Added border-left -->
+            <div class="mb-4 gif-container"> <!-- Margin bottom -->
+                <img src="{{ url_for('static', filename='images/gifs/bicep_curl.gif') }}" class="rounded-md" style="max-width:500px; max-height: 250px;" alt="Exercise 3">
+            </div>
+            <hr class="my-4">
+            <div class="mx-5">
+                <h1 class="font-bold my-4">Instuctions</h1>
+                <ol class="list-decimal">
+                    <li>Stand upright with your feet shoulder-width apart.</li>
+                    <li>Hold a dumbbell in each hand at your sides, palms facing forward.</li>
+                    <li>Curl the dumbbells upward towards your shoulders, keeping your elbows close to your body.</li>
+                    <li>Pause at the top of the movement, squeezing your biceps.</li>
+                    <li>Lower the dumbbells back to the starting position in a controlled manner.</li>
+                    <li>Repeat for the desired number of repetitions.</li>
+                </ol>
+            </div>
+        </div>
     </div>
-    <form action="/home" method="get"> <!-- Modify the action attribute to "/home" -->
-        <button type="submit">Stop Exercise</button>
+    <form action="/home" method="get" class="mt-8 flex justify-center"> <!-- Added margin top and flex justify-center -->
+        <button type="submit" class="border border-orange-500 hover:border-orange-600 text-orange-500 hover:text-orange-600 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Stop Exercise</button>
     </form>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
