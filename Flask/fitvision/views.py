@@ -7,431 +7,242 @@ import math
 import numpy as np
 import subprocess
 
+frame_width = 640
+frame_height = 480
+frame_rate = 60
 
-def calculate_angle(a, b, c):
-    a = np.array(a)  # First
-    b = np.array(b)  # Mid
-    c = np.array(c)  # End
-
-    radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(
-        a[1] - b[1], a[0] - b[0]
-    )
-    angle = np.abs(radians * 180.0 / np.pi)
-
-    if angle > 180.0:
-        angle = 360 - angle
-
-    return angle
+mp_pose = mp.solutions.pose
+pose = mp_pose.Pose()
+cap = None  # Initialize VideoCapture object globally
 
 
-def tricep():
+def bicep():
     def calculate_angle(a, b, c):
-        # Calculate the angle between three points (in radians)
-        angle_radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(
-            a.y - b.y, a.x - b.x
-        )
-        angle_degrees = math.degrees(angle_radians)
-        return abs(angle_degrees)
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
 
-    # Initialize MediaPipe Pose
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
-
-    # Initialize Video Capture
-    cap = cv2.VideoCapture(0)  # Use your desired camera, 0 for default camera
-
-    # Define key points for the tricep extension exercise
-    right_shoulder_keypoint = 11
-    right_elbow_keypoint = 13
-    right_wrist_keypoint = 15
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Flip the frame horizontally for a more intuitive view
-        frame = cv2.flip(frame, 1)
-
-        # Convert the BGR image to RGB
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Perform pose detection
-        results = pose.process(rgb_frame)
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
 
         if results.pose_landmarks:
-            landmarks = results.pose_landmarks.landmark
-            right_shoulder = landmarks[right_shoulder_keypoint]
-            right_elbow = landmarks[right_elbow_keypoint]
-            right_wrist = landmarks[right_wrist_keypoint]
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
 
-            # Calculate the angle between shoulder, elbow, and wrist
-            if right_shoulder and right_elbow and right_wrist:
-                angle = calculate_angle(right_shoulder, right_elbow, right_wrist)
+            left_shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value]
+            left_elbow = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW.value]
+            left_wrist = landmarks[mp.solutions.pose.PoseLandmark.LEFT_WRIST.value]
+            left_arm_angle = calculate_angle(left_shoulder, left_elbow, left_wrist)
 
-                # Draw key points
-                for landmark in [right_shoulder, right_elbow, right_wrist]:
-                    x, y = int(landmark.x * frame.shape[1]), int(
-                        landmark.y * frame.shape[0]
-                    )
-                    cv2.circle(frame, (x, y), 5, (0, 0, 255), -1)
+            min_angle = 45
+            max_angle = 170
+            cv2.putText(frame, f"Left Arm Angle: {round(left_arm_angle, 2)}", (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (255, 255, 255), 1)
 
-                # Annotate the angle value
-                cv2.putText(
-                    frame,
-                    f"Angle: {angle:.2f} degrees",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (0, 255, 0),
-                    2,
-                )
+            if min_angle <= left_arm_angle <= max_angle:
+                cv2.putText(frame, "Bicep Curl Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-                # You can set a threshold for what is considered a proper tricep extension
-                upper_threshold = 150
-                lower_threshold = 40
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.LEFT_WRIST
+                                  ]
 
-                # Determine if the exercise is being performed properly
-                if angle > lower_threshold and angle < upper_threshold:
-                    cv2.putText(
-                        frame,
-                        "Proper Tricep Extension",
-                        (10, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        (0, 255, 0),
-                        2,
-                    )
-                else:
-                    cv2.putText(
-                        frame,
-                        "Improve Tricep Extension",
-                        (10, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        (0, 0, 255),
-                        2,
-                    )
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
 
-        cv2.imshow("Tricep Extension Detector", frame)
+        return frame
 
-        if cv2.waitKey(1) & 0xFF == 27:  # Press 'Esc' to exit
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-
-def biceup_curl():
-
-    mp_drawing = mp.solutions.drawing_utils
-    mp_pose = mp.solutions.pose
-
-    # Create a file to store metrics
-    metrics_file = open("metrics.txt", "w")
-
-    cap = cv2.VideoCapture(0)
-    stage = "down"
-    print("Press q to quit the window!!")
-    with mp_pose.Pose(
-        min_detection_confidence=0.5, min_tracking_confidence=0.5
-    ) as pose:
-        while cap.isOpened():
-            ret, frame = cap.read()
-
-            # to RGB
-            image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            image.flags.writeable = False
-
-            # detect
-            results = pose.process(image)
-
-            try:
-                landmarks = results.pose_landmarks.landmark
-
-                shoulder = [
-                    landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
-                    landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y,
-                ]
-                elbow = [
-                    landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].x,
-                    landmarks[mp_pose.PoseLandmark.LEFT_ELBOW.value].y,
-                ]
-                wrist = [
-                    landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].x,
-                    landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y,
-                ]
-                Hip = [
-                    landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,
-                    landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y,
-                ]
-                EL = calculate_angle(shoulder, elbow, wrist)
-                Sh = calculate_angle(elbow, shoulder, Hip)
-                # puttext
-                cv2.putText(
-                    image,
-                    str(EL),
-                    tuple(np.multiply(elbow, [640, 480]).astype(int)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (255, 255, 255),
-                    2,
-                    cv2.LINE_AA,
-                )
-
-                cv2.putText(
-                    image,
-                    str(Sh),
-                    tuple(np.multiply(shoulder, [640, 480]).astype(int)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (255, 255, 255),
-                    2,
-                    cv2.LINE_AA,
-                )
-                cv2.putText(
-                    image,
-                    "STAGE",
-                    (65, 12),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (0, 0, 0),
-                    1,
-                    cv2.LINE_AA,
-                )
-                cv2.putText(
-                    image,
-                    stage,
-                    (60, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    2,
-                    (255, 255, 255),
-                    2,
-                    cv2.LINE_AA,
-                )
-
-                # Update metrics in the file
-                metrics_file.seek(0)
-                metrics_file.write(f"{EL}\n{Sh}\n{stage}\n")
-                metrics_file.truncate()
-
-                if (EL > 160 and Sh < 25) or (EL < 40 and stage and Sh < 25):
-                    stage = "right"
-                else:
-                    stage = "wrong"
-
-            except:
-                pass
-
-            # Stage data
-            cv2.putText(
-                image,
-                "",
-                (65, 12),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 0),
-                1,
-                cv2.LINE_AA,
-            )
-            cv2.putText(
-                image,
-                stage,
-                (60, 60),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                2,
-                (255, 255, 255),
-                2,
-                cv2.LINE_AA,
-            )
-            # to BGR
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-            # detection
-            mp_drawing.draw_landmarks(
-                image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS
-            )
-
-            cv2.imshow("Mediapipe Feed", image)
-
-            if cv2.waitKey(10) & 0xFF == ord("q"):
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
-
-    # Close the metrics file
-    metrics_file.close()
-
+    return calculate_angle, detect_bicep
 
 def backrow():
-
-    # Function to calculate the angle between three points
     def calculate_angle(a, b, c):
-        angle_rad = math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(
-            a[1] - b[1], a[0] - b[0]
-        )
-        angle_rad = angle_rad % (2 * math.pi)
-        angle_deg = math.degrees(angle_rad)
-        return angle_deg
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
 
-    # Function to check if the angle is within the desired range
     def is_correct_pose(angle, lower_bound, upper_bound):
         return lower_bound <= angle <= upper_bound
 
-    # Initialize MediaPipe Pose
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
 
-    # Start capturing video from the webcam
-    cap = cv2.VideoCapture(0)
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Convert the BGR image to RGB
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Process the image with MediaPipe Pose
-        results = pose.process(rgb_frame)
-
-        # Check if pose landmarks are detected
         if results.pose_landmarks:
-            # Extract landmarks for left shoulder, left elbow, and left wrist
-            left_shoulder = (
-                int(
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.LEFT_SHOULDER
-                    ].x
-                    * frame.shape[1]
-                ),
-                int(
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.LEFT_SHOULDER
-                    ].y
-                    * frame.shape[0]
-                ),
-            )
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
 
-            left_elbow = (
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].x
-                    * frame.shape[1]
-                ),
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].y
-                    * frame.shape[0]
-                ),
-            )
+            left_shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value]
+            left_elbow = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW.value]
+            left_wrist = landmarks[mp.solutions.pose.PoseLandmark.LEFT_WRIST.value]
+            left_hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP.value]
+            left_knee = landmarks[mp.solutions.pose.PoseLandmark.LEFT_KNEE.value]
 
-            left_wrist = (
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].x
-                    * frame.shape[1]
-                ),
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].y
-                    * frame.shape[0]
-                ),
-            )
+            angle_shoulder_elbow_wrist = calculate_angle(left_shoulder, left_elbow, left_wrist)
+            angle_hip_knee_shoulder = calculate_angle(left_hip, left_knee, left_shoulder)
 
-            # Extract landmarks for left hip and left knee
-            left_hip = (
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].x
-                    * frame.shape[1]
-                ),
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].y
-                    * frame.shape[0]
-                ),
-            )
+            cv2.putText(frame, f"angle_shoulder_elbow_wrist {round(angle_shoulder_elbow_wrist, 2)}", (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0), 2)
+            cv2.putText(frame, f"Left Arm Angle: {round(angle_hip_knee_shoulder, 2)}", (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0), 2)
 
-            left_knee = (
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_KNEE].x
-                    * frame.shape[1]
-                ),
-                int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_KNEE].y
-                    * frame.shape[0]
-                ),
-            )
-
-            # Calculate the angles
-            angle_shoulder_elbow_wrist = calculate_angle(
-                left_shoulder, left_elbow, left_wrist
-            )
-            angle_hip_knee_shoulder = calculate_angle(
-                left_hip, left_knee, left_shoulder
-            )
-
-            # Check if the angles are within the desired ranges
-            if is_correct_pose(
-                angle_shoulder_elbow_wrist, 190, 275
-            ) and is_correct_pose(angle_hip_knee_shoulder, 325, 332):
-                message = f"Correct Pose! Shoulder-Elbow-Wrist Angle: {round(angle_shoulder_elbow_wrist, 2)} degrees, Hip-Knee-Shoulder Angle: {round(angle_hip_knee_shoulder, 2)} degrees"
+            if is_correct_pose(angle_shoulder_elbow_wrist, 70, 180) and is_correct_pose(angle_hip_knee_shoulder, 20, 35):
+                # Code block if left_arm_angle is outside the range
+                cv2.putText(frame, "BackRow Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             else:
-                message = f"Incorrect Pose! Shoulder-Elbow-Wrist Angle: {round(angle_shoulder_elbow_wrist, 2)} degrees, Hip-Knee-Shoulder Angle: {round(angle_hip_knee_shoulder, 2)} degrees"
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
-            # Draw circles at the landmark positions
-            cv2.circle(frame, left_shoulder, 5, (0, 255, 0), -1)
-            cv2.circle(frame, left_elbow, 5, (0, 255, 0), -1)
-            cv2.circle(frame, left_wrist, 5, (0, 255, 0), -1)
-            cv2.circle(frame, left_hip, 5, (0, 255, 0), -1)
-            cv2.circle(frame, left_knee, 5, (0, 255, 0), -1)
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.LEFT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.LEFT_HIP,
+                                  mp.solutions.pose.PoseLandmark.LEFT_KNEE
+                                  ]
 
-            # Display the message on the screen
-            cv2.putText(
-                frame,
-                message,
-                (50, 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2,
-                cv2.LINE_AA,
-            )
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
 
-        # Display the frame
-        cv2.imshow("Angle Detection", frame)
+        return frame
 
-        # Break the loop if 'q' key is pressed
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+    return calculate_angle, detect_bicep
+
+
+def shoulderpress():
+    def calculate_angle(a, b, c):
+        radians = math.atan2(c.y - b.y, c.x - b.x) - math.atan2(a.y - b.y, a.x - b.x)
+        angle = math.degrees(radians)
+        angle = (angle + 360) % 360  # Convert angle to be between 0 and 360
+        angle = min(angle, 360 - angle)  # Get the smaller angle between angle and 360 - angle
+        return angle
+
+    def is_correct_pose(angle, lower_bound, upper_bound):
+        return lower_bound <= angle <= upper_bound
+
+    def detect_bicep(frame):
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = pose.process(frame_rgb)
+
+        if results.pose_landmarks:
+            landmarks = {lmk: lm for lmk, lm in enumerate(results.pose_landmarks.landmark)}
+
+            left_shoulder = landmarks[mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value]
+            left_elbow = landmarks[mp.solutions.pose.PoseLandmark.LEFT_ELBOW.value]
+            left_wrist = landmarks[mp.solutions.pose.PoseLandmark.LEFT_WRIST.value]
+            left_hip = landmarks[mp.solutions.pose.PoseLandmark.LEFT_HIP.value]
+
+            right_shoulder = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER.value]
+            right_elbow = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_ELBOW.value]
+            right_wrist = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_WRIST.value]
+            right_hip = landmarks[mp.solutions.pose.PoseLandmark.RIGHT_HIP.value]
+
+            angle_lshoulder_lelbow_lwrist = calculate_angle(left_shoulder, left_elbow, left_wrist)
+            angle_rshoulder_relbow_rwrist = calculate_angle(right_shoulder, right_elbow, right_wrist)
+            angle_lelbow_lshoulder_lhip = calculate_angle(left_elbow, left_shoulder, left_hip)
+            angle_relbow_rshoulder_rhip = calculate_angle(right_elbow, right_shoulder, right_hip)
+
+
+            cv2.putText(frame, f"angle_shoulder_elbow_wrist {round(angle_lelbow_lshoulder_lhip, 2)}", (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,(0, 255, 0), 2)
+
+            if is_correct_pose(angle_lshoulder_lelbow_lwrist, 60, 170) and is_correct_pose(angle_rshoulder_relbow_rwrist,60,170) and is_correct_pose(angle_lelbow_lshoulder_lhip,70,180) and is_correct_pose(angle_relbow_rshoulder_rhip,70,180):
+                # Code block if left_arm_angle is outside the range
+                cv2.putText(frame, "shoulderpress Correct", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Incorrect Form", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+            relevant_landmarks = [mp.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.LEFT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.LEFT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_ELBOW,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_WRIST,
+                                  mp.solutions.pose.PoseLandmark.LEFT_HIP,
+                                  mp.solutions.pose.PoseLandmark.RIGHT_HIP,
+                                  ]
+
+            for landmark in relevant_landmarks:
+                landmark_point = results.pose_landmarks.landmark[landmark.value]
+                h, w, c = frame.shape
+                cx, cy = int(landmark_point.x * w), int(landmark_point.y * h)
+                cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+        return frame
+
+    return calculate_angle, detect_bicep
+def generate_frames(detect_bicep):
+    while True:
+        success, frame = cap.read()
+        if not success:
             break
 
-    # Release the video capture object and close all windows
-    cap.release()
-    cv2.destroyAllWindows()
+        frame = detect_bicep(frame)
+
+        ret, buffer = cv2.imencode('.jpg', frame)
+        if ret:
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
 
 @app.route("/")
 def index():
+    global cap
+    if cap is not None:
+        cap.release()  # Release the VideoCapture object
     return render_template("index.html")
 
+@app.route('/exercise1') #bicep
+def exercise1():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = bicep()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise1.html')
 
-@app.route("/tricep")
-def tricep_path():
+@app.route('/exercise2') # backrow
+def exercise2():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = backrow()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise2.html')
 
-    return Response(tricep(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
+@app.route('/exercise3') #shoulderpress
+def exercise3():
+    global cap
+    if cap is not None:
+        cap.release()
+    calculate_angle, detect_bicep = shoulderpress()
+    global generate_frames_exercise1
+    generate_frames_exercise1 = generate_frames(detect_bicep)
+    return render_template('exercise3.html')
 
-@app.route("/biceup_curl")
-def biceup_path():
-    return Response(biceup_curl(), mimetype="multipart/x-mixed-replace; boundary=frame")
-
-
-@app.route("/back_row")
-def back_row():
-    return Response(backrow(), mimetype="multipart/x-mixed-replace; boundary=frame")
-
+@app.route('/video_feed')
+def video_feed():
+    global cap
+    cap = cv2.VideoCapture(0)  # Initialize VideoCapture object
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
+    cap.set(cv2.CAP_PROP_FPS, frame_rate)
+    return Response(generate_frames_exercise1, mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route("/home")
 def home():
     """Renders the home page."""
+    global cap
+    if cap is not None:
+        cap.release()
     return render_template(
         "index.html",
         title="Home Page",
@@ -442,6 +253,9 @@ def home():
 @app.route("/about")
 def about():
     """Renders the about page."""
+    global cap
+    if cap is not None:
+        cap.release()
     return render_template(
         "about.html",
         title="About",
@@ -454,6 +268,9 @@ def about():
 def explore():
     """Renders the explore page."""
     # Add logic to fetch and display exercises
+    global cap
+    if cap is not None:
+        cap.release()
     return render_template(
         "explore.html",
         title="Explore Exercises",
@@ -464,6 +281,9 @@ def explore():
 @app.route("/login")
 def login():
     """Renders the login page."""
+    global cap
+    if cap is not None:
+        cap.release()
     return render_template(
         "login.html",
         title="Login",
@@ -475,6 +295,9 @@ def login():
 def book_session():
     """Renders the book session page for users."""
     # Add logic to handle session bookings
+    global cap
+    if cap is not None:
+        cap.release()
     return render_template(
         "book_session.html",
         title="Book a Session",
@@ -487,6 +310,9 @@ def session_requests():
     """Renders the session requests page for trainers."""
     # Add logic to handle session requests
     # Dummy session request entries
+    global cap
+    if cap is not None:
+        cap.release()
     session_request1 = {
         "user_name": "User 1",
         "user_email": "user1@example.com",
@@ -513,31 +339,3 @@ def session_requests():
     return render_template(
         "session_requests.html", session_requests=session_requests_data
     )
-
-
-# @app.route('/book_session', methods=['GET', 'POST'])
-# def book_session():
-#     if request.method == 'POST':
-#         full_name = request.form.get('fullName')
-#         email = request.form.get('email')
-#         phone = request.form.get('phone')
-#         session_type = request.form.get('sessionType')
-#         preferred_trainer = request.form.get('preferredTrainer')
-#         session_date = request.form.get('sessionDate')
-#         # Add your session booking logic here
-
-
-#     return render_template('book_session.html')
-
-
-from flask import render_template
-from flask.views import MethodView
-
-
-class CameraView(MethodView):
-    def get(self):
-        return render_template("camera.html")
-
-
-# Add the route for the CameraView
-app.add_url_rule("/camera", view_func=CameraView.as_view("camera"))
