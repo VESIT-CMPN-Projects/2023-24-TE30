@@ -4,14 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plank</title>
+    <!-- Include Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gif-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
-<body>
-    <h1>Plank</h1>
-    <div id="videoContainer">
-        <img id="videoFeed" src="" width="640" height="480">
+<body class="bg-gray-900 text-white">
+    <h1 class="text-3xl font-bold my-4 ml-10">Plank</h1>
+    <div id="videoContainer" class="flex border border-gray-700 rounded-lg overflow-hidden mx-12">
+        <div class="flex-1">
+            <img id="videoFeed" src="" width="640" height="480">
+        </div>
+        <div class="flex-1 p-4 border-l border-gray-700"> <!-- Added border-left -->
+            <div class="mb-4 gif-container"> <!-- Margin bottom -->
+                <img src="{{ url_for('static', filename='images/gifs/plank.gif') }}" class="rounded-md mb-4" style="width:500px; height: 250px; border-radius: 4px;" alt="Exercise 2">
+
+            </div>
+            <hr class="my-4">
+            <div class="mx-5">
+                <h1 class="font-bold my-4">Instuctions</h1>
+                <ol class="list-decimal">
+                    <li>Start by getting into a push-up position, with your hands directly under your shoulders and your body forming a straight line from head to heels.</li>
+                    <li>Engage your core muscles by pulling your belly button towards your spine and tightening your abs.</li>
+                    <li>Hold this position, keeping your body straight and your hips level, avoiding any sagging or lifting.</li>
+                    <li>Focus on maintaining a neutral neck position by looking at a spot on the floor about a foot in front of your hands.</li>
+                    <li>Breathe steadily throughout the exercise, inhaling and exhaling deeply.</li>
+                    <li>Hold the plank for as long as you can maintain proper form, aiming for at least 20-30 seconds for beginners and gradually increasing the duration over time as you build strength.</li>
+                    <li>Once you're ready to finish, gently lower your knees to the ground and rest in a comfortable position.</li>
+                </ol>
+            </div>
+        </div>
     </div>
-<form action="/home" method="get">
-        <button type="submit">Stop Exercise</button>
+    <form action="/home" method="get" class="mt-8 flex justify-center"> <!-- Added margin top and flex justify-center -->
+        <button type="submit" class="border border-orange-500 hover:border-orange-600 text-orange-500 hover:text-orange-600 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Stop Exercise</button>
     </form>
     <script>
         document.addEventListener("DOMContentLoaded", function() {

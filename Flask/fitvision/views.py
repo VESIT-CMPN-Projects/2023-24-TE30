@@ -789,7 +789,7 @@ def exercise7():
     calculate_angle, detect_bicep = tricepextension()
     global generate_frames_exercise1
     generate_frames_exercise1 = generate_frames(detect_bicep)
-    return render_template("exercise6.html")
+    return render_template("exercise7.html")
 
 
 @app.route("/video_feed")

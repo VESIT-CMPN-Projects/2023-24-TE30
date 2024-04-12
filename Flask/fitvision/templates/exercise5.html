@@ -4,14 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lunges</title>
+    <!-- Include Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gif-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
-<body>
-    <h1>Lunges</h1>
-    <div id="videoContainer">
-        <img id="videoFeed" src="" width="640" height="480">
+<body class="bg-gray-900 text-white">
+    <h1 class="text-3xl font-bold my-4 ml-10">Lunges</h1>
+    <div id="videoContainer" class="flex border border-gray-700 rounded-lg overflow-hidden mx-12">
+        <div class="flex-1">
+            <img id="videoFeed" src="" width="640" height="480">
+        </div>
+        <div class="flex-1 p-4 border-l border-gray-700"> <!-- Added border-left -->
+            <div class="mb-4 gif-container"> <!-- Margin bottom -->
+                <img src="{{ url_for('static', filename='images/gifs/lunges.gif') }}" class="rounded-md mb-4" style="width:500px; height: 250px; border-radius: 4px;" alt="Exercise 2">
+
+            </div>
+            <hr class="my-4">
+            <div class="mx-5">
+                <h1 class="font-bold my-4">Instuctions</h1>
+                <ol class="list-decimal">
+                    <li>Stand with your feet shoulder-width apart and your hands on your hips.</li>
+                    <li>Take a step forward with one leg, lowering your hips until both knees are bent at about a 90-degree angle.</li>
+                    <li>Make sure your front knee is directly above your ankle and your back knee is just above the ground.</li>
+                    <li>Push back up to the starting position, using your front heel to drive your body back up.</li>
+                    <li>Repeat on the other side, alternating legs for each lunge.</li>
+                    <li>Keep your torso upright and engage your core for stability.</li>
+                    <li>Perform the exercise for the desired number of repetitions or time.</li>
+                </ol>
+            </div>
+        </div>
     </div>
-<form action="/home" method="get">
-        <button type="submit">Stop Exercise</button>
+    <form action="/home" method="get" class="mt-8 flex justify-center"> <!-- Added margin top and flex justify-center -->
+        <button type="submit" class="border border-orange-500 hover:border-orange-600 text-orange-500 hover:text-orange-600 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Stop Exercise</button>
     </form>
     <script>
         document.addEventListener("DOMContentLoaded", function() {

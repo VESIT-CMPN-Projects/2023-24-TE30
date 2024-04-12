@@ -3,17 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tricep extention
-</title>
+    <title>Tricep Extension</title>
+    <!-- Include Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gif-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
-<body>
-    <h1>tricep extension
-</h1>
-    <div id="videoContainer">
-        <img id="videoFeed" src="" width="640" height="480">
+<body class="bg-gray-900 text-white">
+    <h1 class="text-3xl font-bold my-4 ml-10">Tricep Extension</h1>
+    <div id="videoContainer" class="flex border border-gray-700 rounded-lg overflow-hidden mx-12">
+        <div class="flex-1">
+            <img id="videoFeed" src="" width="640" height="480">
+        </div>
+        <div class="flex-1 p-4 border-l border-gray-700"> <!-- Added border-left -->
+            <div class="mb-4 gif-container"> <!-- Margin bottom -->
+                <img src="{{ url_for('static', filename='images/gifs/tricep.gif') }}" class="rounded-md mb-4" style="width:500px; height: 250px; border-radius: 4px;" alt="Exercise 4">
+            </div>
+            <hr class="my-4">
+            <div class="mx-5">
+                <h1 class="font-bold my-4">Instuctions</h1>
+                <ol class="list-decimal">
+                    <li>Hold a dumbbell with both hands overhead.</li>
+                    <li>Lower the dumbbell behind your head by bending your elbows.</li>
+                    <li>Keep your upper arms still and close to your head.</li>
+                    <li>Pause briefly, then extend your arms to lift the dumbbell back up.</li>
+                    <li>Repeat for the desired number of reps.</li>
+                    <li>Focus on using your triceps to move the weight.</li>
+                </ol>
+            </div>
+        </div>
     </div>
-<form action="/home" method="get">
-        <button type="submit">Stop Exercise</button>
+    <form action="/home" method="get" class="mt-8 flex justify-center"> <!-- Added margin top and flex justify-center -->
+        <button type="submit" class="border border-orange-500 hover:border-orange-600 text-orange-500 hover:text-orange-600 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Stop Exercise</button>
     </form>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
