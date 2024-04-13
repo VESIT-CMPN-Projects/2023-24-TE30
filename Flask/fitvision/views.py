@@ -1,11 +1,28 @@
 from datetime import datetime
-from flask import render_template, request, Response
+from flask import render_template, request, Response, redirect, session
 from fitvision import app
 import cv2
 import mediapipe as mp
 import math
 import numpy as np
 import subprocess
+import pyrebase
+
+app.secret_key = "your_secret_key"
+
+firebase_config = {
+    "apiKey": "AIzaSyAL3E_w1gaR_qaXIw-etd1vVQYbBTctPKs",
+    "authDomain": "evac-77db5.firebaseapp.com",
+    "databaseURL": "https://evac-77db5-default-rtdb.firebaseio.com/",
+    "projectId": "evac-77db5",
+    "storageBucket": "evac-77db5.appspot.com",
+    "messagingSenderId": "832522615412",
+    "appId": "1:832522615412:web:57d363bc5a2422fb816f21",
+}
+
+firebase = pyrebase.initialize_app(firebase_config)
+auth = firebase.auth()
+
 
 frame_width = 640
 frame_height = 480
@@ -707,12 +724,40 @@ def generate_frames(detect_bicep):
             )
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     global cap
-    if cap is not None:
-        cap.release()  # Release the VideoCapture object
+    if request.method == "POST":
+        # Release the VideoCapture object
+        email = request.form["userEmail"]
+        password = request.form["userPassword"]
+        print("There is no p here")
+        try:
+            # Authenticate user with Pyrebase
+            user = auth.sign_in_with_email_and_password(email, password)
+            session["uid"] = user["localId"]  # Save user ID in session
+            print("There is no p1 here")
+            return redirect("/home")
+        except pyrebase.pyrebase.HTTPError:
+            return "Invalid credentials. Please try again."
+
     return render_template("login.html")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["pass"]
+        try:
+            # Create a new user with Pyrebase
+            user = auth.create_user_with_email_and_password(email, password)
+            session["uid"] = user["localId"]  # Save user ID in session
+            return redirect("/login")
+        except pyrebase.pyrebase.HTTPError as e:
+            error_message = str(e.args[1])
+            return render_template("register.html", error=error_message)
+    return render_template("register.html")
 
 
 @app.route("/exercise1")  # bicep
@@ -808,13 +853,15 @@ def video_feed():
 def home():
     """Renders the home page."""
     global cap
-    if cap is not None:
-        cap.release()
-    return render_template(
-        "index.html",
-        title="Home Page",
-        year=datetime.now().year,
-    )
+    if "uid" in session:
+
+        return render_template(
+            "index.html",
+            title="Home Page",
+            year=datetime.now().year,
+        )
+    else:
+        return redirect("/login")
 
 
 @app.route("/about")
